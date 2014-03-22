@@ -47,7 +47,7 @@ struct VS_OUTPUT
 
 
 //--------------------------------------------------------------------------------------
-// 버텍스 실제 함수
+// 버텍스 쉐이더 실제 함수
 //--------------------------------------------------------------------------------------
 VS_OUTPUT RenderSceneVS( float4 vPos : POSITION, float3 vNormal : NORMAL, float2 vTexCoord0 : TEXCOORD0,
                          uniform int nNumLights, uniform bool bTexture, uniform bool bAnimate )
@@ -61,6 +61,7 @@ VS_OUTPUT RenderSceneVS( float4 vPos : POSITION, float3 vNormal : NORMAL, float2
 	if ( bAnimate )
 	{
 		vAnimatedPos += float4( vNormal, 0 ) * ( sin( g_fTime + 5.5 ) + 0.5 ) * 5;
+		// vAnimatedPos += float4( vNormal, 0 ) * 10000 / g_fTime;
 	}
 
 	// 시간 주고, 행렬 주고(그러면 락은 안 걸어도 됨),
@@ -108,7 +109,7 @@ struct PS_OUTPUT
 
 
 //--------------------------------------------------------------------------------------
-// 픽셀 실제 함수
+// 픽셀 쉐이더 실제 함수
 //--------------------------------------------------------------------------------------
 PS_OUTPUT RenderScenePS( VS_OUTPUT In, uniform bool bTexture ) 
 { 
