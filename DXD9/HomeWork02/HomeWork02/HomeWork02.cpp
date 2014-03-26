@@ -262,7 +262,7 @@ INT WINAPI wWinMain( HINSTANCE hInst, HINSTANCE, LPWSTR, INT )
 	};
 	RegisterClassEx( &wc );
 
-	HWND hWnd = CreateWindow( L"D3D Tutorial", L"D3D Tutorial 01 : CreateDevice",
+	HWND hWnd = CreateWindow( L"D3D Tutorial", L"HomeWork 02 FBX to .X Mesh Load",
 							  WS_OVERLAPPEDWINDOW, 100, 100, 900, 600, NULL, NULL, wc.hInstance, NULL );
 
 	if ( SUCCEEDED( InitD3D( hWnd ) ) )
