@@ -11,29 +11,12 @@ D3DMATERIAL9*			g_pMeshMaterials = NULL;
 LPDIRECT3DTEXTURE9*		g_pMeshTextures = NULL;
 DWORD					g_dwNumMaterials = 0L;
 
-struct CUSTOMVERTEX
-{
-	D3DXVECTOR3 position;
-	D3DXVECTOR3 normal;
-	D3DCOLOR	color;
-#ifndef SHOW_HOW_TO_USE_TCI
-	FLOAT		tu, tv;
-#endif
-};
-
-#ifdef SHOW_HOW_TO_USE_TCI
-#define D3DFVF_CUSTOMVERTEX ( D3DFVF_XYZ | D3DFVF_NORMAL )
-#else
-#define D3DFVF_CUSTOMVERTEX ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 )
-#endif
-
 HRESULT InitD3D( HWND hWnd )
 {
 	if ( NULL == ( g_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
 	{
 		return E_FAIL;
 	}
-
 
 	D3DPRESENT_PARAMETERS d3dpp;
 	ZeroMemory( &d3dpp, sizeof( d3dpp ) );
