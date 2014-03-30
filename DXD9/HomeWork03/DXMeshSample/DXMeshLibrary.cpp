@@ -222,7 +222,7 @@ void DXMeshLibrary::Create( int width, int height )
 {
 	WNDCLASSEX wc =
 	{
-		sizeof( WNDCLASSEX ), CS_CLASSDC, MsgProc, 0L, 0L, GetModuleHandle( NULL ),
+		sizeof( WNDCLASSEX ), CS_CLASSDC, StaticProc, 0L, 0L, GetModuleHandle( NULL ),
 		NULL, LoadCursor( NULL, IDC_ARROW ), NULL, NULL, L"MeshLibrary", NULL
 	};
 	RegisterClassEx( &wc );
@@ -230,6 +230,8 @@ void DXMeshLibrary::Create( int width, int height )
 	HWND hWnd = CreateWindow( L"MeshLibrary", L"HomeWork 03 Mesh Library",
 							  WS_OVERLAPPEDWINDOW, 100, 100, 100 + width, 100 + height, 
 							  NULL, NULL, wc.hInstance, NULL );
+
+	SetPropW( hWnd, L"MeshLibrary", ( HANDLE )this );
 
 	if ( SUCCEEDED( InitD3D( hWnd ) ) )
 	{
@@ -253,9 +255,21 @@ void DXMeshLibrary::Create( int width, int height )
 		}
 	}
 	
-	Cleanup();
-
 	UnregisterClass( L"MeshLibrary", wc.hInstance );
+}
+
+LRESULT CALLBACK DXMeshLibrary::StaticProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+	DXMeshLibrary* dxMesh = (DXMeshLibrary*)GetPropW( hWnd, L"MeshLibrary" );
+
+	if ( dxMesh )
+	{
+		return dxMesh->MsgProc( hWnd, msg, wParam, lParam );
+	}
+	else
+	{
+		return DefWindowProc( hWnd, msg, wParam, lParam );
+	}
 }
 
 LRESULT CALLBACK DXMeshLibrary::MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
@@ -263,6 +277,7 @@ LRESULT CALLBACK DXMeshLibrary::MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPA
 	switch ( msg )
 	{
 		case WM_DESTROY:
+			Cleanup();
 			PostQuitMessage( 0 );
 			return 0;
 	}

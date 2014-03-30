@@ -22,8 +22,9 @@ private:
 	void		SetupLights();
 	void		Render();
 
-	static LRESULT CALLBACK		MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
-
+	static LRESULT CALLBACK StaticProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
+	LRESULT CALLBACK		MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
+	
 	LPDIRECT3D9				m_pD3D;
 	LPDIRECT3DDEVICE9		m_pd3dDevice;
 	LPD3DXMESH				m_pMesh;
