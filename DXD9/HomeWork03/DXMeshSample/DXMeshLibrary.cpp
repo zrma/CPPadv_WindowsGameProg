@@ -114,6 +114,11 @@ void DXMeshLibrary::Cleanup()
 		}
 	}
 
+	if ( m_pMesh )
+	{
+		m_pMesh->Release();
+	}
+
 	if ( m_pd3dDevice != NULL )
 	{
 		m_pd3dDevice->Release();
@@ -213,19 +218,6 @@ void DXMeshLibrary::Render()
 	m_pd3dDevice->Present( NULL, NULL, NULL, NULL );
 }
 
-LRESULT CALLBACK DXMeshLibrary::MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
-{
-	switch ( msg )
-	{
-		case WM_DESTROY:
-			DXMeshLibrary::GetInstance()->Cleanup();
-			PostQuitMessage( 0 );
-			return 0;
-	}
-
-	return DefWindowProc( hWnd, msg, wParam, lParam );
-}
-
 void DXMeshLibrary::Create( int width, int height )
 {
 	WNDCLASSEX wc =
@@ -260,6 +252,20 @@ void DXMeshLibrary::Create( int width, int height )
 			}
 		}
 	}
+	
+	Cleanup();
 
 	UnregisterClass( L"MeshLibrary", wc.hInstance );
+}
+
+LRESULT CALLBACK DXMeshLibrary::MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+	switch ( msg )
+	{
+		case WM_DESTROY:
+			PostQuitMessage( 0 );
+			return 0;
+	}
+
+	return DefWindowProc( hWnd, msg, wParam, lParam );
 }

@@ -122,6 +122,11 @@ VOID Cleanup()
 		}
 	}
 
+	if ( g_pMesh )
+	{
+		g_pMesh->Release();
+	}
+
 	if ( g_pd3dDevice != NULL )
 	{
 		g_pd3dDevice->Release();

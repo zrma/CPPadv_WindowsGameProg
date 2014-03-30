@@ -221,6 +221,11 @@ VOID Cleanup()
 		}
 	}
 
+	if ( g_pMesh )
+	{
+		g_pMesh->Release();
+	}
+
 	if ( g_pTexture1 != NULL )
 	{
 		g_pTexture1->Release();
@@ -256,7 +261,6 @@ VOID SetupMatrices()
 {
 	D3DXMATRIXA16 matWorld;
 	D3DXMatrixIdentity( &matWorld );
-	// D3DXMatrixRotationY( &matWorld, timeGetTime() / 500.0f );
 	g_pd3dDevice->SetTransform( D3DTS_WORLD, &matWorld );
 
 	D3DXVECTOR3 vEyept( 0.0f, 2.0f, -5.0f );
@@ -375,11 +379,6 @@ VOID Render()
 		D3DXMATRIXA16 thisMatrix, prevMatrix;
 
 		g_pd3dDevice->GetTransform( D3DTS_WORLD, &prevMatrix );
-
-// 		D3DXMatrixTranslation( &thisMatrix, -3.0f, 2.0f, 5.0f );
-// 		g_pd3dDevice->MultiplyTransform( D3DTS_WORLD, &thisMatrix );
-// 		D3DXMatrixRotationY( &thisMatrix, timeGetTime() / 1000.0f );
-// 		g_pd3dDevice->MultiplyTransform( D3DTS_WORLD, &thisMatrix );
 
 		D3DXMATRIXA16 matFirstTiger, matTrans, matRotate;
 
