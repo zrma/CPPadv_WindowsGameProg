@@ -7,6 +7,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <vector>
+#include <timeapi.h>
 
 const unsigned char VK_A = 0x41;
 const unsigned char VK_B = 0x42;
@@ -42,19 +43,62 @@ LPD3DXFONT				g_pFont = NULL;
 BOOL	g_IsCollisionAABB = FALSE;
 BOOL	g_IsCollisionOBB = FALSE;
 
-struct CUSTOMVERTEX
-{
-	FLOAT x, y, z;
-	DWORD color;
-};
-#define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ|D3DFVF_DIFFUSE)
-
 struct CollisionObject
 {
 	void SetPosition( float x, float y, float z )
 	{
 		m_EyePoint = { x, y, z };
 		m_LookAtPoint = { x, y, z + 1.0f };
+		
+		m_MinVertexPos += { x, y, z };
+		m_MaxVertexPos += { x, y, z };
+
+		for ( UINT i = 0; i < 8; ++i )
+		{
+			m_AABBVertex[i] += m_EyePoint;
+		}
+	}
+
+	void MovePosition( float x, float y, float z )
+	{
+		m_EyePoint += { x, y, z };
+		m_LookAtPoint += { x, y, z };
+
+		m_MinVertexPos += { x, y, z };
+		m_MaxVertexPos += { x, y, z };
+
+		for ( UINT i = 0; i < 8; ++i )
+		{
+			m_AABBVertex[i] += { x, y, z };
+		}
+	}
+
+	void RotateAxisX( float angle )
+	{
+		D3DXMATRIXA16 matrix;
+		D3DXMatrixRotationX( &matrix, angle );
+
+		D3DXVECTOR3 view = m_LookAtPoint - m_EyePoint;
+
+		D3DXVec3TransformCoord( &view, &view, &matrix );
+		m_LookAtPoint = m_EyePoint + view;
+
+		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[0], &m_AxisDir[0] );
+		D3DXVec3TransformCoord( &m_AxisDir[1], &m_AxisDir[1], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[1], &m_AxisDir[1] );
+		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[2], &m_AxisDir[2] );
+
+		for ( UINT i = 0; i < 8; ++i )
+		{
+			m_AABBVertex[i] -= m_EyePoint;
+			D3DXVec3TransformCoord( &m_AABBVertex[i], &m_AABBVertex[i], &matrix );
+			m_AABBVertex[i] += m_EyePoint;
+		}
+		SetAABBVertex();
+
+		SetMeshCollisionBox();
 	}
 
 	void RotateAxisY( float angle )
@@ -62,31 +106,91 @@ struct CollisionObject
 		D3DXMATRIXA16 matrix;
 		D3DXMatrixRotationY( &matrix, angle );
 
-		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
-		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
+		D3DXVECTOR3 view = m_LookAtPoint - m_EyePoint;
 
-		D3DXVECTOR3 vertex[8];
-		vertex[0] = { m_MinVertexPos.x, m_MinVertexPos.y, m_MinVertexPos.z };
-		vertex[1] = { m_MinVertexPos.x, m_MinVertexPos.y, m_MaxVertexPos.z };
-		vertex[2] = { m_MinVertexPos.x, m_MaxVertexPos.y, m_MinVertexPos.z };
-		vertex[3] = { m_MinVertexPos.x, m_MaxVertexPos.y, m_MaxVertexPos.z };
-		vertex[4] = { m_MaxVertexPos.x, m_MinVertexPos.y, m_MinVertexPos.z };
-		vertex[5] = { m_MaxVertexPos.x, m_MinVertexPos.y, m_MaxVertexPos.z };
-		vertex[6] = { m_MaxVertexPos.x, m_MaxVertexPos.y, m_MinVertexPos.z };
-		vertex[7] = { m_MaxVertexPos.x, m_MaxVertexPos.y, m_MaxVertexPos.z };
+		D3DXVec3TransformCoord( &view, &view, &matrix );
+		m_LookAtPoint = m_EyePoint + view;
+
+		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[0], &m_AxisDir[0] );
+		D3DXVec3TransformCoord( &m_AxisDir[1], &m_AxisDir[1], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[1], &m_AxisDir[1] );
+		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[2], &m_AxisDir[2] );
 
 		for ( UINT i = 0; i < 8; ++i )
 		{
-			D3DXVec3TransformCoord( &vertex[i], &vertex[i], &matrix );
+			m_AABBVertex[i] -= m_EyePoint;
+			D3DXVec3TransformCoord( &m_AABBVertex[i], &m_AABBVertex[i], &matrix );
+			m_AABBVertex[i] += m_EyePoint;
 		}
+		SetAABBVertex();
 
-		m_MinVertexPos = m_MaxVertexPos = vertex[0];
+		SetMeshCollisionBox();
+	}
+
+	void RotateAxisZ( float angle )
+	{
+		D3DXMATRIXA16 matrix;
+		D3DXMatrixRotationZ( &matrix, angle );
+
+		D3DXVECTOR3 view = m_LookAtPoint - m_EyePoint;
+
+		D3DXVec3TransformCoord( &view, &view, &matrix );
+		m_LookAtPoint = m_EyePoint + view;
+
+		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[0], &m_AxisDir[0] );
+		D3DXVec3TransformCoord( &m_AxisDir[1], &m_AxisDir[1], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[1], &m_AxisDir[1] );
+		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
+		D3DXVec3Normalize( &m_AxisDir[2], &m_AxisDir[2] );
+
+		for ( UINT i = 0; i < 8; ++i )
+		{
+			m_AABBVertex[i] -= m_EyePoint;
+			D3DXVec3TransformCoord( &m_AABBVertex[i], &m_AABBVertex[i], &matrix );
+			m_AABBVertex[i] += m_EyePoint;
+		}
+		SetAABBVertex();
+
+		SetMeshCollisionBox();
+	}
+
+	void SetAABBVertex()
+	{
+		m_MinVertexPos = m_MaxVertexPos = m_AABBVertex[0];
+		for ( UINT i = 1; i < 8; ++i )
+		{
+			m_MinVertexPos.x = min( m_MinVertexPos.x, m_AABBVertex[i].x );
+			m_MaxVertexPos.x = max( m_MaxVertexPos.x, m_AABBVertex[i].x );
+			m_MinVertexPos.y = min( m_MinVertexPos.y, m_AABBVertex[i].y );
+			m_MaxVertexPos.y = max( m_MaxVertexPos.y, m_AABBVertex[i].y );
+			m_MinVertexPos.z = min( m_MinVertexPos.z, m_AABBVertex[i].z );
+			m_MaxVertexPos.z = max( m_MaxVertexPos.z, m_AABBVertex[i].z );
+		}
+	}
+
+	void SetMeshCollisionBox()
+	{
+		if ( m_MeshCBox )
+		{
+			m_MeshCBox->Release();
+		}
+		D3DXCreateBox( g_pd3dDevice, 
+					   m_MaxVertexPos.x - m_MinVertexPos.x, 
+					   m_MaxVertexPos.y - m_MinVertexPos.y,
+					   m_MaxVertexPos.z - m_MinVertexPos.z,
+					   &m_MeshCBox , NULL );
 	}
 
 	LPD3DXMESH		m_Mesh = nullptr;
+	LPD3DXMESH		m_MeshCBox = nullptr;
 	
 	D3DXVECTOR3		m_MinVertexPos = { 0, 0, 0 };
 	D3DXVECTOR3		m_MaxVertexPos = { 1, 1, 1 };
+
+	D3DXVECTOR3		m_AABBVertex[8];
 
 	D3DXVECTOR3		m_EyePoint = { 0, 0, 0 };
 	D3DXVECTOR3		m_LookAtPoint = { 0, 0, 1.0f };
@@ -307,13 +411,24 @@ HRESULT CreateBoxMesh( CollisionObject* colObject, float xSize, float ySize, flo
 							&( colObject->m_MinVertexPos ), &( colObject->m_MaxVertexPos ) );
 	( colObject->m_Mesh )->UnlockVertexBuffer();
 
-	colObject->m_AxisLen[0] = xSize / 2;
-	colObject->m_AxisLen[1] = ySize / 2;
-	colObject->m_AxisLen[2] = zSize / 2;
+	colObject->m_AxisLen[0] = ( colObject->m_MaxVertexPos.x - colObject->m_MinVertexPos.x ) / 2;
+	colObject->m_AxisLen[1] = ( colObject->m_MaxVertexPos.y - colObject->m_MinVertexPos.y ) / 2;
+	colObject->m_AxisLen[2] = ( colObject->m_MaxVertexPos.z - colObject->m_MinVertexPos.z ) / 2;
 
 	colObject->m_AxisDir[0] = { 1.0f, 0, 0 };
 	colObject->m_AxisDir[1] = { 0, 1.0f, 0 };
 	colObject->m_AxisDir[2] = { 0, 0, 1.0f };
+
+	colObject->m_AABBVertex[0] = { colObject->m_MinVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MinVertexPos.z };
+	colObject->m_AABBVertex[1] = { colObject->m_MinVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MaxVertexPos.z };
+	colObject->m_AABBVertex[2] = { colObject->m_MinVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MinVertexPos.z };
+	colObject->m_AABBVertex[3] = { colObject->m_MinVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MaxVertexPos.z };
+	colObject->m_AABBVertex[4] = { colObject->m_MaxVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MinVertexPos.z };
+	colObject->m_AABBVertex[5] = { colObject->m_MaxVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MaxVertexPos.z };
+	colObject->m_AABBVertex[6] = { colObject->m_MaxVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MinVertexPos.z };
+	colObject->m_AABBVertex[7] = { colObject->m_MaxVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MaxVertexPos.z };
+
+	colObject->SetAABBVertex();
 
 	return S_OK;
 }
@@ -322,7 +437,7 @@ HRESULT InitGeometry()
 {
 	CollisionObject character;
 	HRESULT hr = S_FALSE;
-	if ( S_OK != ( hr = CreateBoxMesh( &character, 1.0f, 1.0f, 1.0f ) ) )
+	if ( S_OK != ( hr = CreateBoxMesh( &character, 1.0f, 1.0f, 3.0f ) ) )
 	{
 		MessageBox( NULL, L"Create Mesh Failed", L"Collision.exe", MB_OK );
 		return hr;
@@ -330,22 +445,33 @@ HRESULT InitGeometry()
 	g_COList.push_back( character );
 
 	CollisionObject	colObject1;
-	colObject1.SetPosition( 3.0f, 0.0f, 3.0f );
-	if ( S_OK != ( hr = CreateBoxMesh( &colObject1, 2.0f, 2.0f, 1.0f ) ) )
+	if ( S_OK != ( hr = CreateBoxMesh( &colObject1, 2.0f, 2.0f, 3.0f ) ) )
 	{
 		MessageBox( NULL, L"Create Mesh Failed", L"Collision.exe", MB_OK );
 		return hr;
 	}
+	colObject1.SetPosition( 5.0f, 0.0f, 5.0f );
+	colObject1.RotateAxisY( -60.0f );
 	g_COList.push_back( colObject1 );
 
 	CollisionObject	colObject2;
-	colObject2.SetPosition( -5.0f, 0.0f, 0.0f );
 	if ( S_OK != ( hr = CreateBoxMesh( &colObject2, 3.0f, 3.0f, 3.0f ) ) )
 	{
 		MessageBox( NULL, L"Create Mesh Failed", L"Collision.exe", MB_OK );
 		return hr;
 	}
+	colObject2.SetPosition( -5.0f, 0.0f, 0.0f );
+	// colObject2.RotateAxisY( 40.0f );
 	g_COList.push_back( colObject2 );
+
+	CollisionObject	colObject3;
+	if ( S_OK != ( hr = CreateBoxMesh( &colObject3, 4.0f, 2.0f, 1.0f ) ) )
+	{
+		MessageBox( NULL, L"Create Mesh Failed", L"Collision.exe", MB_OK );
+		return hr;
+	}
+	colObject3.SetPosition( 0.0f, 0.0f, -4.0f );
+	g_COList.push_back( colObject3 );
 
 	return S_OK;
 }
@@ -356,15 +482,15 @@ VOID SetupMatrices()
 	D3DXMatrixIdentity( &worldMatrix );
 	g_pd3dDevice->SetTransform( D3DTS_WORLD, &worldMatrix );
 
-	D3DXVECTOR3 eyePoint( 0.0f, 5.0f, -30.0f );
+	D3DXVECTOR3 eyePoint( 0.0f, 30.0f, 0.0f );
 	D3DXVECTOR3 lookAtPoint( 0.0f, 0.0f, 0.0f );
-	D3DXVECTOR3 upVector( 0.0f, 1.0f, 0.0f );
+	D3DXVECTOR3 upVector( 0.0f, 0.0f, 1.0f );
 	D3DXMATRIXA16 viewMatrix;
 	D3DXMatrixLookAtLH( &viewMatrix, &eyePoint, &lookAtPoint, &upVector );
 	g_pd3dDevice->SetTransform( D3DTS_VIEW, &viewMatrix );
 
 	D3DXMATRIXA16 projMatrix;
-	D3DXMatrixPerspectiveFovLH( &projMatrix, D3DX_PI / 4, 1.0f, 1.0f, 100.0f );
+	D3DXMatrixPerspectiveFovLH( &projMatrix, D3DX_PI / 6, 1.0f, 1.0f, 100.0f );
 	g_pd3dDevice->SetTransform( D3DTS_PROJECTION, &projMatrix );
 }
 
@@ -375,6 +501,11 @@ VOID Cleanup()
 		if ( toBeDelete.m_Mesh )
 		{
 			toBeDelete.m_Mesh->Release();
+		}
+
+		if ( toBeDelete.m_MeshCBox )
+		{
+			toBeDelete.m_MeshCBox->Release();
 		}
 	}
 	if ( g_pFont != NULL )
@@ -406,33 +537,51 @@ VOID Update()
 	}
 	if ( GetAsyncKeyState( VK_W ) )
 	{
-		g_COList[0].m_EyePoint.z += elapsedTime * 0.01f;
-		g_COList[0].m_LookAtPoint.z += elapsedTime * 0.01f;
+		g_COList[0].MovePosition( 0, 0, elapsedTime * 0.01f );
 	}
 	if ( GetAsyncKeyState( VK_S ) )
 	{
-		g_COList[0].m_EyePoint.z -= elapsedTime * 0.01f;
-		g_COList[0].m_LookAtPoint.z += elapsedTime * 0.01f;
+		g_COList[0].MovePosition( 0, 0, -( elapsedTime * 0.01f ) );
 	}
 	if ( GetAsyncKeyState( VK_A ) )
 	{
-		g_COList[0].m_EyePoint.x -= elapsedTime * 0.01f;
-		g_COList[0].m_LookAtPoint.x -= elapsedTime * 0.01f;
+		g_COList[0].MovePosition( -( elapsedTime * 0.01f ), 0, 0 );
 	}
 	if ( GetAsyncKeyState( VK_D ) )
 	{
-		g_COList[0].m_EyePoint.x += elapsedTime * 0.01f;
-		g_COList[0].m_LookAtPoint.x += elapsedTime * 0.01f;
+		g_COList[0].MovePosition( elapsedTime * 0.01f , 0, 0 );
 	}
 	if ( GetAsyncKeyState( VK_C ) )
 	{
-		g_COList[0].m_EyePoint.y += elapsedTime * 0.01f;
-		g_COList[0].m_LookAtPoint.y += elapsedTime * 0.01f;
+		g_COList[0].MovePosition( 0, elapsedTime * 0.01f, 0 );
 	}
 	if ( GetAsyncKeyState( VK_V ) )
 	{
-		g_COList[0].m_EyePoint.y -= elapsedTime * 0.01f;
-		g_COList[0].m_LookAtPoint.y -= elapsedTime * 0.01f;
+		g_COList[0].MovePosition( 0, -( elapsedTime * 0.01f ), 0 );
+	}
+	if ( GetAsyncKeyState( VK_Q ) )
+	{
+		g_COList[0].RotateAxisY( -( elapsedTime * 0.01f ) );
+	}
+	if ( GetAsyncKeyState( VK_E ) )
+	{
+		g_COList[0].RotateAxisY( elapsedTime * 0.01f );
+	}
+	if ( GetAsyncKeyState( VK_R ) )
+	{
+		g_COList[0].RotateAxisX( elapsedTime * 0.01f ); 
+	}
+	if ( GetAsyncKeyState( VK_F ) )
+	{
+		g_COList[0].RotateAxisX( -( elapsedTime * 0.01f ) );
+	}
+	if ( GetAsyncKeyState( VK_T ) )
+	{
+		g_COList[0].RotateAxisZ( elapsedTime * 0.01f );
+	}
+	if ( GetAsyncKeyState( VK_G ) )
+	{
+		g_COList[0].RotateAxisZ( -( elapsedTime * 0.01f ) ); 
 	}
 
 	if ( g_COList.size() < 2 )
@@ -440,27 +589,11 @@ VOID Update()
 		return;
 	}
 
-	D3DXMATRIX matrix;
-	D3DXMatrixTranslation( &matrix, g_COList[0].m_EyePoint.x, g_COList[0].m_EyePoint.y, g_COList[0].m_EyePoint.z );
-
-	D3DXVECTOR3 box1minVertex;
-	D3DXVECTOR3 box1maxVertex;
-
-	D3DXVec3TransformCoord( &box1minVertex, &( g_COList[0].m_MinVertexPos ), &matrix );
-	D3DXVec3TransformCoord( &box1maxVertex, &( g_COList[0].m_MaxVertexPos ), &matrix );
-
 	for ( UINT i = 1; i < g_COList.size(); ++i )
 	{
-		D3DXMATRIX matrix;
-		D3DXMatrixTranslation( &matrix, g_COList[i].m_EyePoint.x, g_COList[i].m_EyePoint.y, g_COList[i].m_EyePoint.z );
-
-		D3DXVECTOR3 box2minVertex;
-		D3DXVECTOR3 box2maxVertex;
-
-		D3DXVec3TransformCoord( &box2minVertex, &( g_COList[i].m_MinVertexPos ), &matrix );
-		D3DXVec3TransformCoord( &box2maxVertex, &( g_COList[i].m_MaxVertexPos ), &matrix );
-
-		if ( TRUE == ( g_IsCollisionAABB = CheckCollisionAABB( &box1minVertex, &box1maxVertex, &box2minVertex, &box2maxVertex ) ) )
+		if ( TRUE == ( g_IsCollisionAABB = CheckCollisionAABB( 
+			&( g_COList[0].m_MinVertexPos ), &( g_COList[0].m_MaxVertexPos ),
+			&( g_COList[i].m_MinVertexPos ), &( g_COList[i].m_MaxVertexPos ) ) ) )
 		{
 			break;
 		}
@@ -475,6 +608,13 @@ VOID Update()
 		{
 			break;
 		}
+	}
+
+	if ( g_COList.size() > 2 )
+	{
+		g_COList[2].RotateAxisX( elapsedTime * 0.002f );
+		g_COList[2].RotateAxisZ( elapsedTime * 0.002f );
+		g_COList[3].RotateAxisY( elapsedTime * 0.001f );
 	}
 }
 
@@ -504,12 +644,30 @@ VOID Render()
 				
 				iter.m_Mesh->DrawSubset( 0 );
 			}
+
+			if ( iter.m_MeshCBox )
+			{
+				D3DXMATRIXA16 worldMatrix;
+				D3DXMatrixIdentity( &worldMatrix );
+				D3DXMatrixTranslation( &worldMatrix, iter.m_EyePoint.x, iter.m_EyePoint.y, iter.m_EyePoint.z );
+				g_pd3dDevice->SetTransform( D3DTS_WORLD, &worldMatrix );
+				iter.m_MeshCBox->DrawSubset( 0 );
+			}
 		}
 		g_pd3dDevice->EndScene();
 	}
 
+	if ( NULL == g_pFont )
+	{
+		g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
+		return;
+	}
+
 	RECT rt;
 	SetRect( &rt, 10, 10, 0, 0 );
+	g_pFont->DrawText( NULL, L"조작 : W A S D C V(이동) Q E R F T G(회전)", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+	
+	SetRect( &rt, 10, 30, 0, 0 );
 	if ( g_IsCollisionAABB )
 	{
 		g_pFont->DrawText( NULL, L"AABB : 충돌", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
@@ -519,7 +677,7 @@ VOID Render()
 		g_pFont->DrawText( NULL, L"AABB : 비충돌", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	}
 
-	SetRect( &rt, 650, 10, 0, 0 );
+	SetRect( &rt, 650, 30, 0, 0 );
 	if ( g_IsCollisionOBB )
 	{
 		g_pFont->DrawText( NULL, L"OBB : 충돌", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
@@ -573,6 +731,10 @@ INT APIENTRY _tWinMain( _In_ HINSTANCE hInstance,
 	// 윈도우 클래스 등록
 	RegisterClassEx( &wc );
 
+	AllocConsole();
+	FILE* pFile;
+	freopen_s( &pFile, "CONOUT$", "wb", stdout );
+
 	HWND hWnd = CreateWindow( L"Collision", L"Collision", WS_OVERLAPPEDWINDOW,
 							  100, 100, 800, 800, GetDesktopWindow(), NULL, wc.hInstance, NULL );
 
@@ -600,6 +762,8 @@ INT APIENTRY _tWinMain( _In_ HINSTANCE hInstance,
 			}
 		}
 	}
+
+	FreeConsole();
 
 	UnregisterClass( L"Collision", wc.hInstance );
 
