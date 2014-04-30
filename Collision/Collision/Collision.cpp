@@ -57,6 +57,32 @@ struct CollisionObject
 		m_LookAtPoint = { x, y, z + 1.0f };
 	}
 
+	void RotateAxisY( float angle )
+	{
+		D3DXMATRIXA16 matrix;
+		D3DXMatrixRotationY( &matrix, angle );
+
+		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
+
+		D3DXVECTOR3 vertex[8];
+		vertex[0] = { m_MinVertexPos.x, m_MinVertexPos.y, m_MinVertexPos.z };
+		vertex[1] = { m_MinVertexPos.x, m_MinVertexPos.y, m_MaxVertexPos.z };
+		vertex[2] = { m_MinVertexPos.x, m_MaxVertexPos.y, m_MinVertexPos.z };
+		vertex[3] = { m_MinVertexPos.x, m_MaxVertexPos.y, m_MaxVertexPos.z };
+		vertex[4] = { m_MaxVertexPos.x, m_MinVertexPos.y, m_MinVertexPos.z };
+		vertex[5] = { m_MaxVertexPos.x, m_MinVertexPos.y, m_MaxVertexPos.z };
+		vertex[6] = { m_MaxVertexPos.x, m_MaxVertexPos.y, m_MinVertexPos.z };
+		vertex[7] = { m_MaxVertexPos.x, m_MaxVertexPos.y, m_MaxVertexPos.z };
+
+		for ( UINT i = 0; i < 8; ++i )
+		{
+			D3DXVec3TransformCoord( &vertex[i], &vertex[i], &matrix );
+		}
+
+		m_MinVertexPos = m_MaxVertexPos = vertex[0];
+	}
+
 	LPD3DXMESH		m_Mesh = nullptr;
 	
 	D3DXVECTOR3		m_MinVertexPos = { 0, 0, 0 };
@@ -167,8 +193,9 @@ BOOL CheckCollisionOBB( CollisionObject* colObject1, CollisionObject* cObject2 )
 		return FALSE;
 	}
 	if ( existsParallelPair == true )
+	{
 		return TRUE;
-
+	}
 	r = abs( d[2] * c[1][0] - d[1] * c[2][0] );
 	r0 = colObject1->m_AxisLen[1] * absC[2][0] + colObject1->m_AxisLen[2] * absC[1][0];
 	r1 = cObject2->m_AxisLen[1] * absC[0][2] + cObject2->m_AxisLen[2] * absC[0][1];
