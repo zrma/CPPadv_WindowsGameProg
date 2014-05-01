@@ -184,6 +184,29 @@ struct CollisionObject
 					   &m_MeshCBox , NULL );
 	}
 
+	void InitBB()
+	{
+		m_AxisLen[0] = ( m_MaxVertexPos.x - m_MinVertexPos.x ) / 2;
+		m_AxisLen[1] = ( m_MaxVertexPos.y - m_MinVertexPos.y ) / 2;
+		m_AxisLen[2] = ( m_MaxVertexPos.z - m_MinVertexPos.z ) / 2;
+
+		m_AxisDir[0] = { 1.0f, 0, 0 };
+		m_AxisDir[1] = { 0, 1.0f, 0 };
+		m_AxisDir[2] = { 0, 0, 1.0f };
+
+		m_AABBVertex[0] = { m_MinVertexPos.x, m_MinVertexPos.y, m_MinVertexPos.z };
+		m_AABBVertex[1] = { m_MinVertexPos.x, m_MinVertexPos.y, m_MaxVertexPos.z };
+		m_AABBVertex[2] = { m_MinVertexPos.x, m_MaxVertexPos.y, m_MinVertexPos.z };
+		m_AABBVertex[3] = { m_MinVertexPos.x, m_MaxVertexPos.y, m_MaxVertexPos.z };
+		m_AABBVertex[4] = { m_MaxVertexPos.x, m_MinVertexPos.y, m_MinVertexPos.z };
+		m_AABBVertex[5] = { m_MaxVertexPos.x, m_MinVertexPos.y, m_MaxVertexPos.z };
+		m_AABBVertex[6] = { m_MaxVertexPos.x, m_MaxVertexPos.y, m_MinVertexPos.z };
+		m_AABBVertex[7] = { m_MaxVertexPos.x, m_MaxVertexPos.y, m_MaxVertexPos.z };
+
+		SetAABBVertex();
+	}
+
+
 	LPD3DXMESH		m_Mesh = nullptr;
 	LPD3DXMESH		m_MeshCBox = nullptr;
 	
@@ -410,25 +433,7 @@ HRESULT CreateBoxMesh( CollisionObject* colObject, float xSize, float ySize, flo
 							( colObject->m_Mesh )->GetNumBytesPerVertex(),
 							&( colObject->m_MinVertexPos ), &( colObject->m_MaxVertexPos ) );
 	( colObject->m_Mesh )->UnlockVertexBuffer();
-
-	colObject->m_AxisLen[0] = ( colObject->m_MaxVertexPos.x - colObject->m_MinVertexPos.x ) / 2;
-	colObject->m_AxisLen[1] = ( colObject->m_MaxVertexPos.y - colObject->m_MinVertexPos.y ) / 2;
-	colObject->m_AxisLen[2] = ( colObject->m_MaxVertexPos.z - colObject->m_MinVertexPos.z ) / 2;
-
-	colObject->m_AxisDir[0] = { 1.0f, 0, 0 };
-	colObject->m_AxisDir[1] = { 0, 1.0f, 0 };
-	colObject->m_AxisDir[2] = { 0, 0, 1.0f };
-
-	colObject->m_AABBVertex[0] = { colObject->m_MinVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MinVertexPos.z };
-	colObject->m_AABBVertex[1] = { colObject->m_MinVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MaxVertexPos.z };
-	colObject->m_AABBVertex[2] = { colObject->m_MinVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MinVertexPos.z };
-	colObject->m_AABBVertex[3] = { colObject->m_MinVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MaxVertexPos.z };
-	colObject->m_AABBVertex[4] = { colObject->m_MaxVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MinVertexPos.z };
-	colObject->m_AABBVertex[5] = { colObject->m_MaxVertexPos.x, colObject->m_MinVertexPos.y, colObject->m_MaxVertexPos.z };
-	colObject->m_AABBVertex[6] = { colObject->m_MaxVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MinVertexPos.z };
-	colObject->m_AABBVertex[7] = { colObject->m_MaxVertexPos.x, colObject->m_MaxVertexPos.y, colObject->m_MaxVertexPos.z };
-
-	colObject->SetAABBVertex();
+	colObject->InitBB();
 
 	return S_OK;
 }
