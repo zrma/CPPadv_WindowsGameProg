@@ -1,4 +1,4 @@
-// Collision.cpp : ÀÀ¿ë ÇÁ·Î±×·¥¿¡ ´ëÇÑ ÁøÀÔÁ¡À» Á¤ÀÇÇÕ´Ï´Ù.
+ï»¿// Collision.cpp : ì‘ìš© í”„ë¡œê·¸ë¨ì— ëŒ€í•œ ì§„ì…ì ì„ ì •ì˜í•©ë‹ˆë‹¤.
 //
 
 #include "stdafx.h"
@@ -410,7 +410,7 @@ HRESULT InitD3D( HWND hWnd )
 	}
 
 	D3DXCreateFont( g_pd3dDevice, 15, 0, FW_NORMAL, 1, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-					DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"µ¸À½Ã¼", &g_pFont );
+					DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"ë‹ìŒì²´", &g_pFont );
 	
 	g_pd3dDevice->SetRenderState( D3DRS_LIGHTING, FALSE );
 	g_pd3dDevice->SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME );
@@ -670,26 +670,26 @@ VOID Render()
 
 	RECT rt;
 	SetRect( &rt, 10, 10, 0, 0 );
-	g_pFont->DrawText( NULL, L"Á¶ÀÛ : W A S D C V(ÀÌµ¿) Q E R F T G(È¸Àü)", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+	g_pFont->DrawText( NULL, L"ì¡°ì‘ : W A S D C V(ì´ë™) Q E R F T G(íšŒì „)", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	
 	SetRect( &rt, 10, 30, 0, 0 );
 	if ( g_IsCollisionAABB )
 	{
-		g_pFont->DrawText( NULL, L"AABB : Ãæµ¹", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+		g_pFont->DrawText( NULL, L"AABB : ì¶©ëŒ", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	}
 	else
 	{
-		g_pFont->DrawText( NULL, L"AABB : ºñÃæµ¹", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+		g_pFont->DrawText( NULL, L"AABB : ë¹„ì¶©ëŒ", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	}
 
-	SetRect( &rt, 650, 30, 0, 0 );
+	SetRect( &rt, 10, 50, 0, 0 );
 	if ( g_IsCollisionOBB )
 	{
-		g_pFont->DrawText( NULL, L"OBB : Ãæµ¹", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+		g_pFont->DrawText( NULL, L"OBB  : ì¶©ëŒ", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	}
 	else
 	{
-		g_pFont->DrawText( NULL, L"OBB : ºñÃæµ¹", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+		g_pFont->DrawText( NULL, L"OBB  : ë¹„ì¶©ëŒ", -1, &rt, DT_NOCLIP, D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	}
 
 	g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
@@ -733,7 +733,7 @@ INT APIENTRY _tWinMain( _In_ HINSTANCE hInstance,
 		NULL
 	};
 
-	// À©µµ¿ì Å¬·¡½º µî·Ï
+	// ìœˆë„ìš° í´ë˜ìŠ¤ ë“±ë¡
 	RegisterClassEx( &wc );
 
 	AllocConsole();
