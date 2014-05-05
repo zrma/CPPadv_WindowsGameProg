@@ -33,8 +33,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::cout << "called?" << std::endl;
 	}
 
+	Base b;
+	( b.*bb )( );
 	Derived d;
 	( d.*bb )( );
+	( d.*dd )( );
 
 	getchar();
 	return 0;
