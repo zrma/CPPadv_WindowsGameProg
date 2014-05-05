@@ -83,13 +83,10 @@ struct CollisionObject
 		D3DXVec3TransformCoord( &view, &view, &matrix );
 		m_LookAtPoint = m_EyePoint + view;
 
-		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[0], &m_AxisDir[0] );
-		D3DXVec3TransformCoord( &m_AxisDir[1], &m_AxisDir[1], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[1], &m_AxisDir[1] );
-		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[2], &m_AxisDir[2] );
-
+		D3DXVec3TransformNormal( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3TransformNormal( &m_AxisDir[1], &m_AxisDir[1], &matrix );
+		D3DXVec3TransformNormal( &m_AxisDir[2], &m_AxisDir[2], &matrix );
+		
 		for ( UINT i = 0; i < 8; ++i )
 		{
 			m_AABBVertex[i] -= m_EyePoint;
@@ -111,12 +108,9 @@ struct CollisionObject
 		D3DXVec3TransformCoord( &view, &view, &matrix );
 		m_LookAtPoint = m_EyePoint + view;
 
-		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[0], &m_AxisDir[0] );
-		D3DXVec3TransformCoord( &m_AxisDir[1], &m_AxisDir[1], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[1], &m_AxisDir[1] );
-		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[2], &m_AxisDir[2] );
+		D3DXVec3TransformNormal( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3TransformNormal( &m_AxisDir[1], &m_AxisDir[1], &matrix );
+		D3DXVec3TransformNormal( &m_AxisDir[2], &m_AxisDir[2], &matrix );
 
 		for ( UINT i = 0; i < 8; ++i )
 		{
@@ -139,12 +133,9 @@ struct CollisionObject
 		D3DXVec3TransformCoord( &view, &view, &matrix );
 		m_LookAtPoint = m_EyePoint + view;
 
-		D3DXVec3TransformCoord( &m_AxisDir[0], &m_AxisDir[0], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[0], &m_AxisDir[0] );
-		D3DXVec3TransformCoord( &m_AxisDir[1], &m_AxisDir[1], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[1], &m_AxisDir[1] );
-		D3DXVec3TransformCoord( &m_AxisDir[2], &m_AxisDir[2], &matrix );
-		D3DXVec3Normalize( &m_AxisDir[2], &m_AxisDir[2] );
+		D3DXVec3TransformNormal( &m_AxisDir[0], &m_AxisDir[0], &matrix );
+		D3DXVec3TransformNormal( &m_AxisDir[1], &m_AxisDir[1], &matrix );
+		D3DXVec3TransformNormal( &m_AxisDir[2], &m_AxisDir[2], &matrix );
 
 		for ( UINT i = 0; i < 8; ++i )
 		{
