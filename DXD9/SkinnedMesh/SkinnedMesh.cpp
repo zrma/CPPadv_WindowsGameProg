@@ -72,7 +72,7 @@ void		ReleaseAttributeTable( LPD3DXFRAME frameBase );
 
 HRESULT AllocateName( LPCSTR name, LPSTR* newName )
 {
-	UINT length;
+	UINT length = 0;
 
 	if ( name != nullptr )
 	{
